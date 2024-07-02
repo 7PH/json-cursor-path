@@ -114,45 +114,38 @@ export class CursorToJsonPath {
   }
 
   private parseValue(index: number, path: JsonPath, key: string | number): ParseResult {
+    const pathStr = this.pathToString(path);
+
     // Then, it's either an object, a number or a string
-    const valueStart = this.parseUntilToken(index, '{["0123456789tf'.split(""));
+    const valueStart = this.parseUntilToken(index, '{["0123456789tfn'.split(""));
     const valueChar = this.code[valueStart];
     let valueEnd: number;
     if (valueChar === "{") {
       // Object
-      console.log(`> ${this.pathToString(path)} : ${key} (object) >>>`);
       const result = this.parseObject(valueStart, [...path, key]);
       valueEnd = result.endIndex;
       if (result.found) {
         return result;
       }
-      console.log(`> ${this.pathToString(path)} : ${key} (object) <<<`);
     } else if (valueChar === "[") {
       // Array
-      console.log(`> ${this.pathToString(path)} : ${key} (array) >>>`);
       const result = this.parseArray(valueStart, [...path, key]);
       valueEnd = result.endIndex;
       if (result.found) {
         return result;
       }
-      console.log(`> ${this.pathToString(path)} : ${key} (array) <<<`);
     } else if (valueChar === '"') {
       // String
       valueEnd = this.parseUntilToken(valueStart + 1, '"', true);
-      console.log(`> ${this.pathToString(path)} : ${key} (string)`);
-    } else if (["t", "f"].includes(valueChar)) {
-      // Boolean
-      valueEnd = this.parseBoolean(valueStart);
-      console.log(
-        `> ${this.pathToString(path)} : ${key} (boolean=${this.code.slice(
-          valueStart,
-          valueEnd + 1
-        )})`
-      );
+      console.log(`> ${pathStr} : ${key} (string)`);
+    } else if (["t", "f", "n"].includes(valueChar)) {
+      // Litteral
+      valueEnd = this.parseAnyLitteral(valueStart);
+      console.log(`> ${pathStr} : ${key} (literral=${this.code.slice(valueStart, valueEnd + 1)})`);
     } else {
       // Number
       valueEnd = this.parseUntilToken(valueStart + 1, [",", "}", "]", " ", "\n"]) - 1;
-      console.log(`> ${this.pathToString(path)} : ${key} (number)`);
+      console.log(`> ${pathStr} : ${key} (number)`);
     }
 
     // Find the next key or end of object
@@ -167,8 +160,15 @@ export class CursorToJsonPath {
     return { found: false, endIndex: separatorIndex };
   }
 
-  private parseBoolean(index: number): number {
-    return index + (this.code[index] === "t" ? 3 : 4);
+  private parseAnyLitteral(index: number): number {
+    // Continue until the next char is not a char
+    while (++index < this.code.length) {
+      const char = this.code[index];
+      if (!/[a-zA-Z]/.test(char)) {
+        return index - 1;
+      }
+    }
+    return index;
   }
 
   /**

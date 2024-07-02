@@ -2,6 +2,7 @@
   "test1": "hmm",
   "test2": {
     "test3": true,
+    "test4": null,
     "fff": {
       "fffff": "fffff"
     }
