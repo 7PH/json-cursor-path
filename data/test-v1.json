@@ -4,6 +4,6 @@
     "test3": "t{s}}"
   },
   "test5": {
-    "tes\"t6": ["test7", "test8", "test9"]
+    "test6": "test7"
   }
 }
