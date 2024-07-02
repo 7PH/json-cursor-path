@@ -6,10 +6,7 @@ export type ParseResult = {
   path?: JsonPath;
 };
 
-/**
- * Locations where the cursor may be in the JSON code.
- */
-export class CursorToJsonPath {
+export class JsonParser {
   private readonly code: string;
   private cursor: number = 0;
 

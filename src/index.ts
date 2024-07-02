@@ -1,5 +1,5 @@
 import fs from "fs";
-import { CursorToJsonPath } from "./CursorToJsonPath.js";
+import { JsonParser } from "./JsonParser";
 
 // const FILE = "data/test-v2.json";
 // const CURSOR = 153;
@@ -9,7 +9,7 @@ const CURSOR = 43871;
 
 const data = fs.readFileSync(FILE, "utf8");
 
-const jsonPath = new CursorToJsonPath(data).getCursorPath(CURSOR);
+const jsonPath = new JsonParser(data).getCursorPath(CURSOR);
 
 console.log("=".repeat(20));
 console.log(`Cursor position: ${CURSOR} <~> ${jsonPath}`);

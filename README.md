@@ -10,7 +10,7 @@ This project is WIP/unfinished, please don't use.
 const CURSOR = 23123;
 const data = fs.readFileSync("data/test-notebook.json");
 
-const path = new CursorToJsonPath(data).getCursorPath(CURSOR);
+const path = new JsonParser(data).getCursorPath(CURSOR);
 ```
 
 ## Performance
