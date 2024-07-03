@@ -28,13 +28,19 @@ export class JsonParser {
       result = this.parseArray(startIndex + 1, []);
     }
 
-    if (!result || !result.path) {
+    // If we couldn't find the cursor anywhere or the JSON root isn't an array or object
+    if (!result?.path) {
       return "";
     }
 
     return this.pathToString(result.path);
   }
 
+  /**
+   * Convert a path to a string representation.
+   * This should be compatible with third party libraries eg 
+   * @TODO This path should be a valid JSON path that can be passed to `jsonpath`
+   */
   pathToString(path: JsonPath): string {
     function toString(p: string | number, addDot?: boolean) {
       if (typeof p === "number") {
@@ -55,7 +61,10 @@ export class JsonParser {
     return pathStr;
   }
 
-  parseArray(startIndex: number, path: JsonPath, index: number = 0): ParseResult {
+  /**
+   * Parse an array. Place the index at the end square bracket or stop as soon as the cursor is found.
+   */
+  private parseArray(startIndex: number, path: JsonPath, index: number = 0): ParseResult {
     // Check whether the array is empty
     if (index === 0) {
       const firstTokenIndex = this.parseUntilToken(startIndex + 1, '{["0123456789tf]'.split(""));
@@ -65,15 +74,21 @@ export class JsonParser {
       }
     }
 
-    // Handle next key or stop if there are no more
+    // TODO: If not empty array, teleport index to `firstTokenIndex` to avoid double traversal
+
+    // Parse a single value in the array
     const result = this.parseValue(startIndex + 1, path, index);
     if (result.found || this.code[result.endIndex] === "]") {
       return result;
     }
 
+    // Parse next value if there is one
     return this.parseArray(result.endIndex + 1, path, index + 1);
   }
 
+  /**
+   * Parse an object. Place the index at the end curly bracket or stop as soon as the cursor is found.
+   */
   private parseObject(openBracketIndex: number, path: JsonPath): ParseResult {
     const keyResult = this.parseObjectKey(openBracketIndex);
     if (keyResult.found || !keyResult.key) {
@@ -89,8 +104,10 @@ export class JsonParser {
     return this.parseObject(result.endIndex + 1, path);
   }
 
+  /**
+   * Parse an object key. Place the index at the `:` before the value.
+   */
   private parseObjectKey(startIndex: number): ParseResult & { key?: string } {
-    // An object is a list of key -> value pairs, we will navigate through the keys and values
     const keyStart = this.parseUntilToken(startIndex, ['"', "}"]);
     if (this.code[keyStart] === "}") {
       // No entries in the object
@@ -100,7 +117,6 @@ export class JsonParser {
     const keyEnd = this.parseUntilToken(keyStart + 1, '"', true);
     const key = this.code.slice(keyStart + 1, keyEnd);
 
-    // Find ':'
     const colonIndex = this.parseUntilToken(keyEnd, ":");
 
     return {
@@ -110,6 +126,9 @@ export class JsonParser {
     };
   }
 
+  /**
+   * Parse any JSON value. Place the cursor at the separator after the value (could be one of `,]}`).
+   */
   private parseValue(index: number, path: JsonPath, key: string | number): ParseResult {
     const pathStr = this.pathToString(path);
 
@@ -137,6 +156,7 @@ export class JsonParser {
       console.log(`> ${pathStr} : ${key} (string)`);
     } else if (["t", "f", "n"].includes(valueChar)) {
       // Litteral
+      // TODO: We could be more defensive here and accept `undefined`, or any other litteral
       valueEnd = this.parseAnyLitteral(valueStart);
       console.log(`> ${pathStr} : ${key} (literral=${this.code.slice(valueStart, valueEnd + 1)})`);
     } else {
@@ -145,20 +165,21 @@ export class JsonParser {
       console.log(`> ${pathStr} : ${key} (number)`);
     }
 
-    // Find the next key or end of object
+    // Find the next key or end of object/array
     const separatorIndex = this.parseUntilToken(valueEnd + 1, [",", "}", "]"]);
 
-    // If the cursor is within the value start/end, we found it
+    // Cursor somewhere within the value?
     if (index <= this.cursor && this.cursor <= valueEnd) {
-      // If the cursor is between the key first quote and the value end, add key
       return { found: true, path: [...path, key], endIndex: separatorIndex };
     }
 
     return { found: false, endIndex: separatorIndex };
   }
 
+  /**
+   * Parse any litteral. Place the cursor at the end of the litteral (last char).
+   */
   private parseAnyLitteral(index: number): number {
-    // Continue until the next char is not a char
     while (++index < this.code.length) {
       const char = this.code[index];
       if (!/[a-zA-Z]/.test(char)) {
