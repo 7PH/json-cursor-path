@@ -1,11 +1,13 @@
 {
   "name": "json-position-to-path",
   "version": "0.0.1",
+  "type": "module",
   "description": "",
-  "main": "index.js",
+  "main": "build/src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node build/index.js"
+    "start": "npm run build && node build/index.js",
+    "test": "npm run build && node --test build/test/JsonParser.js"
   },
   "keywords": [
     "json",
@@ -15,7 +17,13 @@
   "author": "7PH <b.raymond@protonmail.com",
   "license": "ISC",
   "devDependencies": {
+    "@babel/preset-env": "^7.24.7",
+    "@babel/preset-typescript": "^7.24.7",
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.14.9",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.5",
     "typescript": "^5.5.3"
   }
 }

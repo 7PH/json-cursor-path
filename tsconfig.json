@@ -9,5 +9,7 @@
     "outDir": "build",
     "lib": ["DOM"]
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }
