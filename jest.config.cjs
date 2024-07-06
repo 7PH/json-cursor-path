@@ -1,7 +1,7 @@
 module.exports = {
     collectCoverage: true,
     collectCoverageFrom: [
-        'src/**/*'
+        'src/**/JsonParser.ts'
     ],
     coverageProvider: 'v8',
     testMatch: [

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { JsonParser } from "../src/JsonParser";
+import { JsonCursorPath } from "../src/JsonCursorPath";
 
 // Load all json files in fixtures and save them with their file names
 function loadFixtures() {
@@ -13,11 +13,25 @@ function loadFixtures() {
 
 const fixtures = loadFixtures();
 
-describe("JsonParser", () => {
-    describe('should work with simple objects', () => {
-        it('cursor in a string value', () => {
-            const parser = new JsonParser(fixtures['00-simple-object.json']);
-            expect(parser.getCursorPath(37)).toBe('key2');
-        })
+describe("JsonCursorPath", () => {
+    describe('objects', () => {
+        describe('simple object', () => {
+            it('> string', () => {
+                const parser = new JsonCursorPath(fixtures['00-object-simple.json']);
+                expect(parser.get(20)).toBe('$.first-key');
+            });
+            
+            it('> object > array > string', () => {
+                const parser = new JsonCursorPath(fixtures['00-object-simple.json']);
+                expect(parser.get(253)).toBe('$.another-object.containing-array[1]');
+            });
+        });
+
+        describe('jupyter notebook', () => {
+            it('> string', () => {
+                const parser = new JsonCursorPath(fixtures['01-object-jupyter-notebook.json']);
+                expect(parser.get(233331)).toBe('$.cells[21].outputs[1].data.image/png');
+            });
+        });
     });
 });

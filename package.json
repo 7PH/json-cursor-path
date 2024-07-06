@@ -1,13 +1,12 @@
 {
-  "name": "json-position-to-path",
+  "name": "json-p2p",
   "version": "0.0.1",
   "type": "module",
   "description": "",
-  "main": "build/src/index.js",
+  "main": "build/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node build/index.js",
-    "test": "npm run build && node --test build/test/JsonParser.js"
+    "test": "jest"
   },
   "keywords": [
     "json",

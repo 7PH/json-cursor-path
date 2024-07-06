@@ -1,39 +1,51 @@
-export type JsonPath = (string | number)[];
+export type PathToCursor = (string | number)[];
 
-export type ParseResult = {
-  endIndex: number;
-  found: boolean;
-  path?: JsonPath;
+export type JsonCursorPathOptions = {
+  verbose?: boolean;
 };
 
-export class JsonParser {
+type ParseStepResult = {
+  endIndex: number;
+  found: boolean;
+  path?: PathToCursor;
+};
+
+export class JsonCursorPath {
   private readonly code: string;
   private cursor: number = 0;
+  private options: JsonCursorPathOptions;
 
-  constructor(code: string) {
+  constructor(code: string, options?: JsonCursorPathOptions) {
     this.code = code;
+    this.options = {
+      verbose: false,
+      ...options,
+    };
   }
 
-  getCursorPath(cursor: number): string {
+  get(cursor: number, returnRawPath: true): PathToCursor;
+  get(cursor: number, returnRawPath?: false): string;
+  get(cursor: number, returnRawPath?: boolean): PathToCursor | string {
     this.cursor = cursor;
 
     // Find the first opening bracket, and consider it root
     const startIndex = this.parseUntilToken(0, '{["'.split(""));
     const startChar = this.code[startIndex];
 
-    let result: ParseResult | undefined;
+    let result: ParseStepResult | undefined;
     if (startChar === "{") {
       result = this.parseObject(startIndex + 1, []);
     } else if (startChar === "[") {
       result = this.parseArray(startIndex + 1, []);
     }
 
-    // If we couldn't find the cursor anywhere or the JSON root isn't an array or object
-    if (!result?.path) {
-      return "";
+    let path: PathToCursor = result?.path ? result.path : [];
+
+    if (returnRawPath) {
+      return path;
     }
 
-    return this.pathToString(result.path);
+    return this.rawPathToString(path);
   }
 
   /**
@@ -41,7 +53,7 @@ export class JsonParser {
    * This should be compatible with third party libraries eg 
    * @TODO This path should be a valid JSON path that can be passed to `jsonpath`
    */
-  pathToString(path: JsonPath): string {
+  rawPathToString(path: PathToCursor): string {
     function toString(p: string | number, addDot?: boolean) {
       if (typeof p === "number") {
         return `[${p}]`;
@@ -49,13 +61,13 @@ export class JsonParser {
       return addDot ? `.${p}` : p;
     }
 
-    if (path.length <= 1) {
-      return path[0]?.toString() ?? "";
+    if (path.length === 0) {
+      return '$';
     }
 
-    let pathStr = toString(path[0]);
-    for (let i = 1; i < path.length; i++) {
-      pathStr += toString(path[i], true);
+    let pathStr = '$';
+    for (const element of path) {
+      pathStr += toString(element, true);
     }
 
     return pathStr;
@@ -64,7 +76,7 @@ export class JsonParser {
   /**
    * Parse an array. Place the index at the end square bracket or stop as soon as the cursor is found.
    */
-  private parseArray(startIndex: number, path: JsonPath, index: number = 0): ParseResult {
+  private parseArray(startIndex: number, path: PathToCursor, index: number = 0): ParseStepResult {
     // Check whether the array is empty
     if (index === 0) {
       const firstTokenIndex = this.parseUntilToken(startIndex + 1, '{["0123456789tf]'.split(""));
@@ -89,7 +101,7 @@ export class JsonParser {
   /**
    * Parse an object. Place the index at the end curly bracket or stop as soon as the cursor is found.
    */
-  private parseObject(openBracketIndex: number, path: JsonPath): ParseResult {
+  private parseObject(openBracketIndex: number, path: PathToCursor): ParseStepResult {
     const keyResult = this.parseObjectKey(openBracketIndex);
     if (keyResult.found || !keyResult.key) {
       return keyResult;
@@ -107,7 +119,7 @@ export class JsonParser {
   /**
    * Parse an object key. Place the index at the `:` before the value.
    */
-  private parseObjectKey(startIndex: number): ParseResult & { key?: string } {
+  private parseObjectKey(startIndex: number): ParseStepResult & { key?: string } {
     const keyStart = this.parseUntilToken(startIndex, ['"', "}"]);
     if (this.code[keyStart] === "}") {
       // No entries in the object
@@ -129,10 +141,11 @@ export class JsonParser {
   /**
    * Parse any JSON value. Place the cursor at the separator after the value (could be one of `,]}`).
    */
-  private parseValue(index: number, path: JsonPath, key: string | number): ParseResult {
-    const pathStr = this.pathToString(path);
+  private parseValue(index: number, path: PathToCursor, key: string | number): ParseStepResult {
+    const pathStr = this.rawPathToString(path);
 
     // Then, it's either an object, a number or a string
+    // TODO: We could be more defensive here and accept `undefined`, or any other litteral
     const valueStart = this.parseUntilToken(index, '{["0123456789tfn'.split(""));
     const valueChar = this.code[valueStart];
     let valueEnd: number;
@@ -153,16 +166,15 @@ export class JsonParser {
     } else if (valueChar === '"') {
       // String
       valueEnd = this.parseUntilToken(valueStart + 1, '"', true);
-      console.log(`> ${pathStr} : ${key} (string)`);
+      this.log(`> ${pathStr} : ${key} (string)`);
     } else if (["t", "f", "n"].includes(valueChar)) {
       // Litteral
-      // TODO: We could be more defensive here and accept `undefined`, or any other litteral
       valueEnd = this.parseAnyLitteral(valueStart);
-      console.log(`> ${pathStr} : ${key} (literral=${this.code.slice(valueStart, valueEnd + 1)})`);
+      this.log(`> ${pathStr} : ${key} (literral=${this.code.slice(valueStart, valueEnd + 1)})`);
     } else {
       // Number
       valueEnd = this.parseUntilToken(valueStart + 1, [",", "}", "]", " ", "\n"]) - 1;
-      console.log(`> ${pathStr} : ${key} (number)`);
+      this.log(`> ${pathStr} : ${key} (number)`);
     }
 
     // Find the next key or end of object/array
@@ -213,5 +225,14 @@ export class JsonParser {
     }
 
     return index;
+  }
+
+  /**
+   * Log if in verbose mode.
+   */
+  log(...message: unknown[]) {
+    if (this.options.verbose) {
+      console.log(message);
+    }
   }
 }
