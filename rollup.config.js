@@ -1,8 +1,10 @@
 import esbuild, { minify } from 'rollup-plugin-esbuild';
 
+const NAME = 'json-cursor-path';
+
 const bundle = config => ({
     ...config,
-    input: 'src/index.ts',
+    input: `src/${NAME}.ts`,
 });
 
 export default [
@@ -10,7 +12,7 @@ export default [
         plugins: [esbuild(), minify()],
         output: [
             {
-                file: `dist/json-cursor-path.min.js`,
+                file: `dist/${NAME}.min.js`,
                 name: 'window',
                 extend: true,
                 format: 'iife',
@@ -21,7 +23,7 @@ export default [
         plugins: [esbuild(), minify()],
         output: [
             {
-                file: `build/index.cjs`,
+                file: `build/${NAME}.cjs`,
                 format: 'cjs',
             },
         ],

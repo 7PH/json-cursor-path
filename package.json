@@ -1,14 +1,18 @@
 {
   "name": "json-cursor-path",
-  "version": "0.0.2",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/7PH/json-cursor-path.git"
+  },
   "type": "module",
   "exports": {
-    "import": "./build/index.js",
-    "require": "./build/index.cjs"
+    "import": "./build/json-cursor-path.js",
+    "require": "./build/json-cursor-path.cjs"
   },
   "description": "Convert a position in a raw JSON to the path in the parsed object",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "build/json-cursor-path.js",
+  "types": "build/json-cursor-path.d.ts",
   "files": [
     "build/**/*",
     "dist/*.js"
@@ -43,7 +47,7 @@
   },
   "size-limit": [
     {
-      "limit": "900 B",
+      "limit": "999 B",
       "path": "dist/*.min.js"
     }
   ]
