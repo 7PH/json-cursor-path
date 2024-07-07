@@ -23,8 +23,12 @@ type ParseStepResult = {
 
 export class JsonCursorPath {
   private readonly code: string;
-  private cursor: number = 0;
   private options: JsonCursorPathOptions;
+
+  /**
+   * Internal cursor position, used during parsing
+   */
+  private __cursorPosition: number = 0;
 
   constructor(code: string, options?: JsonCursorPathOptions) {
     this.code = code;
@@ -33,10 +37,10 @@ export class JsonCursorPath {
     };
   }
 
-  get(cursor: number, returnRawPath: true): PathToCursor;
-  get(cursor: number, returnRawPath?: false): string;
-  get(cursor: number, returnRawPath?: boolean): PathToCursor | string {
-    this.cursor = cursor;
+  get(cursorPosition: number, returnRawPath: true): PathToCursor;
+  get(cursorPosition: number, returnRawPath?: false): string;
+  get(cursorPosition: number, returnRawPath?: boolean): PathToCursor | string {
+    this.__cursorPosition = cursorPosition;
 
     // Find the first opening bracket, and consider it root
     const startIndex = this.parseUntilToken(0, '{["'.split(""));
@@ -89,8 +93,10 @@ export class JsonCursorPath {
     if (index === 0) {
       const firstTokenIndex = this.parseUntilToken(startIndex + 1, '{["0123456789tf]'.split(""));
       if (this.code[firstTokenIndex] === "]") {
-        const found = this.cursor >= startIndex && this.cursor <= firstTokenIndex;
-        return { endIndex: firstTokenIndex, found };
+        return {
+          endIndex: firstTokenIndex,
+          found: this.cursorWithin(startIndex, firstTokenIndex),
+        };
       }
     }
 
@@ -131,8 +137,10 @@ export class JsonCursorPath {
     const keyStart = this.parseUntilToken(startIndex, ['"', "}"]);
     if (this.code[keyStart] === "}") {
       // No entries in the object
-      const found = this.cursor >= startIndex && this.cursor <= keyStart;
-      return { endIndex: keyStart, found };
+      return {
+        endIndex: keyStart,
+        found: this.cursorWithin(startIndex, keyStart)
+      };
     }
     const keyEnd = this.parseUntilToken(keyStart + 1, '"', true);
     const key = this.code.slice(keyStart + 1, keyEnd);
@@ -142,7 +150,7 @@ export class JsonCursorPath {
     return {
       key,
       endIndex: colonIndex,
-      found: this.cursor >= keyStart && this.cursor <= colonIndex,
+      found: this.cursorWithin(keyStart, colonIndex),
     };
   }
 
@@ -184,11 +192,12 @@ export class JsonCursorPath {
     const separatorIndex = this.parseUntilToken(valueEnd + 1, [",", "}", "]"]);
 
     // Cursor somewhere within the value?
-    if (index <= this.cursor && this.cursor <= valueEnd) {
-      return { found: true, path: [...path, key], endIndex: separatorIndex };
+    const found = this.cursorWithin(index, valueEnd);
+    return {
+      found,
+      path: found ? [...path, key] : undefined,
+      endIndex: separatorIndex,
     }
-
-    return { found: false, endIndex: separatorIndex };
   }
 
   /**
@@ -228,5 +237,12 @@ export class JsonCursorPath {
     }
 
     return index;
+  }
+
+  /**
+   * Whether the cursor position in within the specified bounds (includes these bounds)
+   */
+  private cursorWithin(startIndex: number, endIndex: number) {
+    return startIndex <= this.__cursorPosition && this.__cursorPosition <= endIndex;
   }
 }

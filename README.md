@@ -1,6 +1,6 @@
 # json-cursor-path
 
-Library to convert a cursor position in a JSON file to the path in the parsed JSON object.
+Convert a cursor position in a JSON file to the path in the parsed JSON object.
 
 ## Getting started
 
@@ -16,17 +16,29 @@ Library to convert a cursor position in a JSON file to the path in the parsed JS
    import { JsonCursorPath } from "json-cursor-path";
    ```
 
-3. Create an instance representing a JSON file
+3. Create an instance and pass the raw JSON file
 
    ```js
-   const cursorPath = new JsonCursorPath(`{\n  "key": ["val1", "val2"]\n}`);
+   const cursorPath = new JsonCursorPath(
+     '{\n  "key": [\n    "val1",\n    "val2"\n  ]\n}'
+   );
    ```
 
 4. Get the path corresponding to a cursor position
 
    ```js
-   console.log(cursorPath.get(15)); // Output: "$.key[0]"
-   console.log(cursorPath.get(15, true)); // Output: ["key", 0]
+   console.log(cursorPath.get(20));
+   /**
+    * Output: "$.key[0]"
+    */
+
+   console.log(cursorPath.get(20, true));
+   /**
+    * Output: [
+    *    { type: 'object', key: 'key' },
+    *    { type: 'array', index: 0 }
+    * ]
+    */
    ```
 
 ## Performance
