@@ -12,7 +12,10 @@ export type PathEntry = {
 export type PathToCursor = PathEntry[];
 
 export type JsonCursorPathOptions = {
-
+  /**
+   * If the cursor position is within a string, whether to specify the string index in the path.
+   */
+  specifyStringIndex: boolean;
 };
 
 type ParseStepResult = {
@@ -33,6 +36,7 @@ export class JsonCursorPath {
   constructor(code: string, options?: JsonCursorPathOptions) {
     this.code = code;
     this.options = {
+      specifyStringIndex: false,
       ...options,
     };
   }
@@ -179,7 +183,11 @@ export class JsonCursorPath {
       }
     } else if (valueChar === '"') {
       // String
-      valueEnd = this.parseUntilToken(valueStart + 1, '"', true);
+      const result = this.parseString(valueStart, [...path, key]);
+      valueEnd = result.endIndex;
+      if (result.found) {
+        return result;
+      }
     } else if (["t", "f", "n"].includes(valueChar)) {
       // Litteral
       valueEnd = this.parseAnyLitteral(valueStart);
@@ -197,6 +205,31 @@ export class JsonCursorPath {
       found,
       path: found ? [...path, key] : undefined,
       endIndex: separatorIndex,
+    }
+  }
+
+  /**
+   * Parse a string value. Place the cursor at the end quote.
+   */
+  private parseString(firstQuoteIndex: number, path: PathToCursor): ParseStepResult {
+    const endQuoteIndex = this.parseUntilToken(firstQuoteIndex + 1, '"', true);
+    
+    // Cursor within string value
+    if (this.options.specifyStringIndex && this.cursorWithin(firstQuoteIndex + 1, endQuoteIndex - 1)) {
+      return {
+        found: true,
+        path: [...path, {
+          type: 'string',
+          index: this.__cursorPosition - firstQuoteIndex - 1
+        }],
+        endIndex: endQuoteIndex
+      }
+    }
+
+    return {
+      found: this.cursorWithin(firstQuoteIndex, endQuoteIndex),
+      path,
+      endIndex: endQuoteIndex,
     }
   }
 
