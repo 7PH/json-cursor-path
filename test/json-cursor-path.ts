@@ -47,8 +47,8 @@ describe('JsonCursorPath', () => {
         });
     });
 
-    describe('should return correct path', () => {
-        it('get cursor path in a string value', () => {
+    describe('should return correct path in strings', () => {
+        it('gets cursor path in a string value', () => {
             const parser = new JsonCursorPath(fixtures['00-object-simple.json'], { ...OPTIONS });
             const cursor = 20;
             expect(parser.get(cursor)).toBe('$["first-key"][2]');
@@ -58,7 +58,7 @@ describe('JsonCursorPath', () => {
             ]);
         });
 
-        it('ignore false-flag characters', () => {
+        it('ignores false-flag characters in strings', () => {
             const parser = new JsonCursorPath(fixtures['01-object-false-flags.json'], {
                 ...OPTIONS,
             });
@@ -120,6 +120,32 @@ describe('JsonCursorPath', () => {
                 { type: 'object', key: 'image/png' },
                 { type: 'string', index: 23 },
             ]);
+        });
+    });
+
+    describe('should return correct path in numbers', () => {
+        it('gets cursor path in a number value', () => {
+            const parser = new JsonCursorPath(fixtures['00-object-simple.json'], { ...OPTIONS });
+            for (let cursor = 126; cursor < 138; cursor++) {
+                expect(parser.get(cursor)).toBe('$["nested-object"]["second-nested-object"].foo');
+                expect(parser.get(cursor, true)).toEqual([
+                    { type: 'object', key: 'nested-object' },
+                    { type: 'object', key: 'second-nested-object' },
+                    { type: 'object', key: 'foo' },
+                ]);
+            }
+        });
+
+        it('gets cursor path in a number value in arrays', () => {
+            const parser = new JsonCursorPath(fixtures['03-array-simple.json'], { ...OPTIONS });
+            for (let cursor = 78; cursor < 79; cursor++) {
+                expect(parser.get(cursor)).toBe('$[0][3][2]');
+                expect(parser.get(cursor, true)).toEqual([
+                    { type: 'array', index: 0 },
+                    { type: 'array', index: 3 },
+                    { type: 'array', index: 2 },
+                ]);
+            }
         });
     });
 });
