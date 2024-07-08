@@ -28,18 +28,22 @@ type ParseStepResult = {
 };
 
 export class JsonCursorPath {
-    private readonly code: string;
     private options: JsonCursorPathOptions;
+
+    /**
+     * Internal reference to the code being parsed
+     */
+    private readonly code: string;
 
     /**
      * Internal cursor position, used during parsing
      */
-    private __cursorPosition: number = 0;
+    private cursorPosition: number = 0;
 
     /**
      * Current path to the cursor. used during parsing
      */
-    private __path: PathToCursor = [];
+    private path: PathToCursor = [];
 
     constructor(code: string, options?: JsonCursorPathOptions) {
         this.code = code;
@@ -52,30 +56,20 @@ export class JsonCursorPath {
     get(cursorPosition: number, returnRawPath: true): PathToCursor | null;
     get(cursorPosition: number, returnRawPath?: false): string | null;
     get(cursorPosition: number, returnRawPath?: boolean): PathToCursor | string | null {
-        this.__cursorPosition = cursorPosition;
-        this.__path = [];
+        this.cursorPosition = cursorPosition;
+        this.path = [];
 
-        // Find the first opening bracket, and consider it root
-        const startIndex = this.parseUntilToken(0, '{["'.split(''));
-        const startChar = this.code[startIndex];
+        const result = this.parseValue(0);
 
-        let result: ParseStepResult | undefined;
-        if (startChar === '{') {
-            result = this.parseObject(startIndex + 1);
-        } else if (startChar === '[') {
-            result = this.parseArray(startIndex + 1);
-        }
-
-        if (!result?.found) {
+        if (!result.found) {
             return null;
         }
 
-        // Save result path
-        const path = [...this.__path];
+        const path = [...this.path];
 
-        // Reset the internal positions
-        this.__cursorPosition = 0;
-        this.__path = [];
+        // Reset internal state for cleanup
+        this.cursorPosition = 0;
+        this.path = [];
 
         return returnRawPath ? path : this.rawPathToString(path);
     }
@@ -123,7 +117,7 @@ export class JsonCursorPath {
 
         // TODO: If not empty array, teleport index to `firstTokenIndex` to avoid double traversal
 
-        this.__path.push({
+        this.path.push({
             type: 'array',
             index,
         });
@@ -134,7 +128,7 @@ export class JsonCursorPath {
             return result;
         }
 
-        this.__path.pop();
+        this.path.pop();
 
         if (this.code[result.endIndex] === ']') {
             return result;
@@ -153,7 +147,7 @@ export class JsonCursorPath {
             return keyResult;
         }
 
-        this.__path.push({
+        this.path.push({
             type: 'object',
             key: keyResult.key,
         });
@@ -167,7 +161,7 @@ export class JsonCursorPath {
             return result;
         }
 
-        this.__path.pop();
+        this.path.pop();
 
         if (this.code[result.endIndex] === '}') {
             return result;
@@ -260,11 +254,11 @@ export class JsonCursorPath {
         if (this.options.specifyStringIndex && this.cursorWithin(firstQuoteIndex, endQuoteIndex)) {
             if (endQuoteIndex - firstQuoteIndex > 1) {
                 // We make it such that if the cursor is on a quote, it is considered to be within the string
-                let index = this.__cursorPosition - firstQuoteIndex - 1;
+                let index = this.cursorPosition - firstQuoteIndex - 1;
                 index = Math.min(index, endQuoteIndex - firstQuoteIndex - 2);
                 index = Math.max(0, index);
 
-                this.__path.push({
+                this.path.push({
                     type: 'string',
                     index,
                 });
@@ -329,6 +323,6 @@ export class JsonCursorPath {
      * Whether the cursor position in within the specified bounds (includes these bounds)
      */
     private cursorWithin(startIndex: number, endIndex: number) {
-        return startIndex <= this.__cursorPosition && this.__cursorPosition <= endIndex;
+        return startIndex <= this.cursorPosition && this.cursorPosition <= endIndex;
     }
 }

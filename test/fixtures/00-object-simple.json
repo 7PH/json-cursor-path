@@ -4,7 +4,7 @@
     "boolean": true,
     "null-value": null,
     "second-nested-object": {
-      "foo": "bar"
+      "foo": 13e-4
     }
   },
   "empty-object": {},
