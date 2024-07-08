@@ -1,54 +1,55 @@
 {
-  "name": "json-cursor-path",
-  "version": "0.1.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/7PH/json-cursor-path.git"
-  },
-  "type": "module",
-  "exports": {
-    "import": "./build/json-cursor-path.js",
-    "require": "./build/json-cursor-path.cjs"
-  },
-  "description": "Convert a position in a raw JSON to the path in the parsed object",
-  "main": "build/json-cursor-path.js",
-  "types": "build/json-cursor-path.d.ts",
-  "files": [
-    "build/**/*",
-    "dist/*.js"
-  ],
-  "scripts": {
-    "build": "tsc && rollup -c",
-    "size": "size-limit",
-    "test": "jest"
-  },
-  "keywords": [
-    "json",
-    "json-cursor",
-    "json-parser",
-    "json-path",
-    "parser"
-  ],
-  "author": "7PH <b.raymond@protonmail.com",
-  "license": "MIT",
-  "devDependencies": {
-    "@babel/preset-env": "^7.24.7",
-    "@babel/preset-typescript": "^7.24.7",
-    "@size-limit/preset-small-lib": "^11.1.4",
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.14.9",
-    "babel-jest": "^29.7.0",
-    "jest": "^29.7.0",
-    "rollup": "^4.18.0",
-    "rollup-plugin-esbuild": "^6.1.1",
-    "size-limit": "^11.1.4",
-    "ts-jest": "^29.1.5",
-    "typescript": "^5.5.3"
-  },
-  "size-limit": [
-    {
-      "limit": "999 B",
-      "path": "dist/*.min.js"
-    }
-  ]
+    "name": "json-cursor-path",
+    "version": "1.0.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/7PH/json-cursor-path.git"
+    },
+    "type": "module",
+    "exports": {
+        "import": "./build/json-cursor-path.js",
+        "require": "./build/json-cursor-path.cjs"
+    },
+    "description": "Convert a position in a raw JSON to the path in the parsed object",
+    "main": "build/json-cursor-path.js",
+    "types": "build/json-cursor-path.d.ts",
+    "files": [
+        "build/**/*",
+        "dist/*.js"
+    ],
+    "scripts": {
+        "build": "tsc && rollup -c",
+        "size": "size-limit",
+        "test": "jest"
+    },
+    "keywords": [
+        "json",
+        "json-cursor",
+        "json-parser",
+        "json-path",
+        "parser"
+    ],
+    "author": "7PH <b.raymond@protonmail.com",
+    "license": "MIT",
+    "devDependencies": {
+        "@babel/preset-env": "^7.24.7",
+        "@babel/preset-typescript": "^7.24.7",
+        "@size-limit/preset-small-lib": "^11.1.4",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20.14.9",
+        "babel-jest": "^29.7.0",
+        "jest": "^29.7.0",
+        "prettier": "^3.3.2",
+        "rollup": "^4.18.0",
+        "rollup-plugin-esbuild": "^6.1.1",
+        "size-limit": "^11.1.4",
+        "ts-jest": "^29.1.5",
+        "typescript": "^5.5.3"
+    },
+    "size-limit": [
+        {
+            "limit": "999 B",
+            "path": "dist/*.min.js"
+        }
+    ]
 }
