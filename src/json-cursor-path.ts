@@ -92,7 +92,7 @@ export class JsonCursorPath {
             }
 
             if (element.type === 'object') {
-                if (/[^\w]/.test(element.key)) {
+                if (/[^\w]/.test(element.key) || element.key === '') {
                     pathStr += `["${element.key}"]`;
                 } else {
                     pathStr += `.${element.key}`;
@@ -149,7 +149,7 @@ export class JsonCursorPath {
      */
     private parseObject(openBracketIndex: number): ParseStepResult {
         const keyResult = this.parseObjectKey(openBracketIndex);
-        if (!keyResult.key) {
+        if (typeof keyResult.key === 'undefined') {
             return keyResult;
         }
 
@@ -254,25 +254,28 @@ export class JsonCursorPath {
      * Parse a string value. Place the cursor at the end quote.
      */
     private parseString(firstQuoteIndex: number): ParseStepResult {
-        this.__path.push({
-            type: 'string',
-            index: this.__cursorPosition - firstQuoteIndex - 1,
-        });
-
         const endQuoteIndex = this.parseUntilToken(firstQuoteIndex + 1, '"', true);
 
         // Cursor within string value
-        if (
-            this.options.specifyStringIndex &&
-            this.cursorWithin(firstQuoteIndex + 1, endQuoteIndex - 1)
-        ) {
+        if (this.options.specifyStringIndex && this.cursorWithin(firstQuoteIndex, endQuoteIndex)) {
+            if (endQuoteIndex - firstQuoteIndex > 1) {
+                // We make it such that if the cursor is on a quote, it is considered to be within the string
+                let index = this.__cursorPosition - firstQuoteIndex - 1;
+                index = Math.min(index, endQuoteIndex - firstQuoteIndex - 2);
+                index = Math.max(0, index);
+
+                this.__path.push({
+                    type: 'string',
+                    index,
+                });
+            }
+
             return {
                 found: true,
                 endIndex: endQuoteIndex,
             };
         }
 
-        this.__path.pop();
         return {
             found: this.cursorWithin(firstQuoteIndex, endQuoteIndex),
             endIndex: endQuoteIndex,
