@@ -63,15 +63,17 @@ describe('JsonCursorPath', () => {
                 ...OPTIONS,
             });
             const cursor = 111;
+            // String index is 17 (logical character index), not 20 (raw byte offset)
+            // because escape sequences like \" and \\\\ count as single characters
             expect(parser.get(cursor)).toBe(
-                '$["\\"{}}[]]].:-]\\\\\\\\"][0][0]["\\"{}}[]]].:-]\\\\\\\\"][20]',
+                '$["\\"{}}[]]].:-]\\\\\\\\"][0][0]["\\"{}}[]]].:-]\\\\\\\\"][17]',
             );
             expect(parser.get(cursor, true)).toEqual([
                 { type: 'object', key: '\\"{}}[]]].:-]\\\\\\\\' },
                 { type: 'array', index: 0 },
                 { type: 'array', index: 0 },
                 { type: 'object', key: '\\"{}}[]]].:-]\\\\\\\\' },
-                { type: 'string', index: 20 },
+                { type: 'string', index: 17 },
             ]);
         });
 
