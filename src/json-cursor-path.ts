@@ -139,8 +139,6 @@ export class JsonCursorPath {
             }
         }
 
-        // TODO: If not empty array, teleport index to `firstTokenIndex` to avoid double traversal
-
         this.path.push({
             type: 'array',
             index,
@@ -154,7 +152,8 @@ export class JsonCursorPath {
 
         this.path.pop();
 
-        if (this.code[result.endIndex] === ']') {
+        // End of array or end of input (malformed JSON with trailing comma)
+        if (this.code[result.endIndex] === ']' || result.endIndex >= this.code.length) {
             return result;
         }
 
