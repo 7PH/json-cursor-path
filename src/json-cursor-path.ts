@@ -200,7 +200,7 @@ export class JsonCursorPath {
      */
     private parseObjectKey(startIndex: number): ParseStepResult & { key?: string } {
         const keyStart = this.parseUntilToken(startIndex, ['"', '}']);
-        if (this.code[keyStart] === '}') {
+        if (this.code[keyStart] === '}' || keyStart >= this.code.length) {
             // No entries in the object
             return {
                 endIndex: keyStart,
