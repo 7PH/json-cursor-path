@@ -28,6 +28,30 @@ type ParseStepResult = {
 };
 
 export class JsonCursorPath {
+    /** First characters of literal values: true, false, null */
+    private static readonly TOKEN_LITERAL = ['t', 'f', 'n'];
+
+    /** Tokens that can start a JSON value */
+    private static readonly TOKEN_VALUE_START = [
+        '{',
+        '[',
+        '"',
+        ...JsonCursorPath.TOKEN_LITERAL,
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+        '9',
+    ];
+
+    /** Tokens that end a JSON value (separators) */
+    private static readonly TOKEN_SEPARATOR = [',', '}', ']'];
+
     private options: JsonCursorPathOptions;
 
     /**
@@ -103,10 +127,10 @@ export class JsonCursorPath {
     private parseArray(startIndex: number, index: number = 0): ParseStepResult {
         // Check whether the array is empty
         if (index === 0) {
-            const firstTokenIndex = this.parseUntilToken(
-                startIndex + 1,
-                '{["0123456789tf]'.split(''),
-            );
+            const firstTokenIndex = this.parseUntilToken(startIndex + 1, [
+                ...JsonCursorPath.TOKEN_VALUE_START,
+                ']',
+            ]);
             if (this.code[firstTokenIndex] === ']') {
                 return {
                     endIndex: firstTokenIndex,
@@ -200,8 +224,7 @@ export class JsonCursorPath {
      */
     private parseValue(index: number): ParseStepResult {
         // Then, it's either an object, a number or a string
-        // TODO: We could be more defensive here and accept `undefined`, or any other litteral
-        const valueStart = this.parseUntilToken(index, '{["0123456789tfn'.split(''));
+        const valueStart = this.parseUntilToken(index, JsonCursorPath.TOKEN_VALUE_START);
         const valueChar = this.code[valueStart];
         let valueEnd: number;
         if (valueChar === '{') {
@@ -225,16 +248,21 @@ export class JsonCursorPath {
             if (result.found) {
                 return result;
             }
-        } else if (['t', 'f', 'n'].includes(valueChar)) {
-            // Litteral
-            valueEnd = this.parseAnyLitteral(valueStart);
+        } else if (JsonCursorPath.TOKEN_LITERAL.includes(valueChar)) {
+            // Literal
+            valueEnd = this.parseAnyLiteral(valueStart);
         } else {
             // Number
-            valueEnd = this.parseUntilToken(valueStart + 1, [',', '}', ']', ' ', '\n']) - 1;
+            valueEnd =
+                this.parseUntilToken(valueStart + 1, [
+                    ...JsonCursorPath.TOKEN_SEPARATOR,
+                    ' ',
+                    '\n',
+                ]) - 1;
         }
 
         // Find the next key or end of object/array
-        const separatorIndex = this.parseUntilToken(valueEnd + 1, [',', '}', ']']);
+        const separatorIndex = this.parseUntilToken(valueEnd + 1, JsonCursorPath.TOKEN_SEPARATOR);
 
         // Cursor somewhere within the value?
         const found = this.cursorWithin(index, valueEnd);
@@ -302,9 +330,9 @@ export class JsonCursorPath {
     }
 
     /**
-     * Parse any litteral. Place the cursor at the end of the litteral (last char).
+     * Parse any literal. Place the cursor at the end of the literal (last char).
      */
-    private parseAnyLitteral(index: number): number {
+    private parseAnyLiteral(index: number): number {
         while (++index < this.code.length) {
             const char = this.code[index];
             if (!/[a-zA-Z]/.test(char)) {
