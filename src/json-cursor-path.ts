@@ -245,6 +245,36 @@ export class JsonCursorPath {
     }
 
     /**
+     * Get the logical character index within a string, accounting for escape sequences.
+     * For example, in the string "hello\nworld", the cursor after '\n' is at logical index 6,
+     * even though the raw byte offset would be 7.
+     */
+    private getStringCursorIndex(firstQuoteIndex: number, endQuoteIndex: number): number {
+        const cursorOffset = this.cursorPosition - firstQuoteIndex;
+
+        // If cursor is on or before the opening quote, return 0
+        if (cursorOffset <= 0) {
+            return 0;
+        }
+
+        let logicalIndex = -1;
+        let rawOffset = 0;
+
+        while (rawOffset < cursorOffset) {
+            // Check if current char is a backslash (escape sequence)
+            if (this.code[firstQuoteIndex + 1 + rawOffset] === '\\') {
+                rawOffset += 2; // Skip the escape sequence (e.g., \n, \", \\)
+            } else {
+                rawOffset += 1;
+            }
+            logicalIndex++;
+        }
+
+        // Clamp to valid range (max is string length - 1)
+        return Math.max(0, Math.min(logicalIndex, endQuoteIndex - firstQuoteIndex - 2));
+    }
+
+    /**
      * Parse a string value. Place the cursor at the end quote.
      */
     private parseString(firstQuoteIndex: number): ParseStepResult {
@@ -253,14 +283,9 @@ export class JsonCursorPath {
         // Cursor within string value
         if (this.options.specifyStringIndex && this.cursorWithin(firstQuoteIndex, endQuoteIndex)) {
             if (endQuoteIndex - firstQuoteIndex > 1) {
-                // We make it such that if the cursor is on a quote, it is considered to be within the string
-                let index = this.cursorPosition - firstQuoteIndex - 1;
-                index = Math.min(index, endQuoteIndex - firstQuoteIndex - 2);
-                index = Math.max(0, index);
-
                 this.path.push({
                     type: 'string',
-                    index,
+                    index: this.getStringCursorIndex(firstQuoteIndex, endQuoteIndex),
                 });
             }
 
