@@ -1,6 +1,9 @@
 # json-cursor-path
 
-Convert a cursor position in a JSON file to the path in the parsed JSON object.
+![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![size](https://img.shields.io/badge/size-~1KB-blue)
+
+Get the JSONPath at any cursor position in JSON text. Perfect for editor plugins, JSON tools, and autocomplete features.
 
 ## Getting started
 
