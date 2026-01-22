@@ -125,6 +125,37 @@ describe('JsonCursorPath', () => {
         });
     });
 
+    describe('should handle malformed JSON gracefully', () => {
+        it('does not crash on trailing comma in array', () => {
+            const parser = new JsonCursorPath('[1,]', OPTIONS);
+            // Should not throw - just verify it returns something without stack overflow
+            expect(() => parser.get(0)).not.toThrow();
+            expect(() => parser.get(1)).not.toThrow();
+            expect(() => parser.get(2)).not.toThrow();
+            expect(() => parser.get(3)).not.toThrow();
+            // Cursor on '1' should return the first element path
+            expect(parser.get(1)).toBe('$[0]');
+        });
+
+        it('does not crash on trailing comma in nested array', () => {
+            const parser = new JsonCursorPath('[1, 2, [3,]]', OPTIONS);
+            // Should not throw
+            for (let i = 0; i < 12; i++) {
+                expect(() => parser.get(i)).not.toThrow();
+            }
+            // Cursor on '3' should return nested path
+            expect(parser.get(8)).toBe('$[2][0]');
+        });
+
+        it('does not crash on trailing comma in object', () => {
+            const parser = new JsonCursorPath('{"a": 1,}', OPTIONS);
+            // Should not throw
+            for (let i = 0; i < 9; i++) {
+                expect(() => parser.get(i)).not.toThrow();
+            }
+        });
+    });
+
     describe('should return correct path in numbers', () => {
         it('gets cursor path in a number value', () => {
             const parser = new JsonCursorPath(fixtures['00-object-simple.json'], { ...OPTIONS });
