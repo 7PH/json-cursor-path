@@ -156,6 +156,25 @@ describe('JsonCursorPath', () => {
         });
     });
 
+    describe('should handle edge cases', () => {
+        it('returns null when cursor is beyond JSON content', () => {
+            const parser = new JsonCursorPath('{"a": 1}', OPTIONS);
+            expect(parser.get(100)).toBeNull();
+        });
+
+        it('returns string index 0 when cursor is on opening quote', () => {
+            const parser = new JsonCursorPath('{"a": "hello"}', { specifyStringIndex: true });
+            // Cursor on the opening " of "hello" (index 6)
+            expect(parser.get(6)).toBe('$.a[0]');
+        });
+
+        it('handles JSON that is just a keyword', () => {
+            expect(new JsonCursorPath('true', OPTIONS).get(2)).toBe('$');
+            expect(new JsonCursorPath('false', OPTIONS).get(3)).toBe('$');
+            expect(new JsonCursorPath('null', OPTIONS).get(1)).toBe('$');
+        });
+    });
+
     describe('should return correct path in numbers', () => {
         it('gets cursor path in a number value', () => {
             const parser = new JsonCursorPath(fixtures['00-object-simple.json'], { ...OPTIONS });

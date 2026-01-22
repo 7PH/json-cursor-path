@@ -100,7 +100,7 @@ export class JsonCursorPath {
 
     /**
      * Convert a path to a string representation.
-     * This should be compatible with third party libraries eg
+     * Output follows JSONPath notation (e.g., $.store.book[0].title).
      */
     rawPathToString(path: PathToCursor): string {
         let pathStr = '$';
@@ -206,7 +206,7 @@ export class JsonCursorPath {
                 found: this.cursorWithin(startIndex, keyStart),
             };
         }
-        const keyEnd = this.parseUntilToken(keyStart + 1, '"', true);
+        const keyEnd = this.parseUntilToken(keyStart + 1, '"');
         const key = this.code.slice(keyStart + 1, keyEnd);
 
         const colonIndex = this.parseUntilToken(keyEnd, ':');
@@ -305,7 +305,7 @@ export class JsonCursorPath {
      * Parse a string value. Place the cursor at the end quote.
      */
     private parseString(firstQuoteIndex: number): ParseStepResult {
-        const endQuoteIndex = this.parseUntilToken(firstQuoteIndex + 1, '"', true);
+        const endQuoteIndex = this.parseUntilToken(firstQuoteIndex + 1, '"');
 
         // Cursor within string value
         if (this.options.specifyStringIndex && this.cursorWithin(firstQuoteIndex, endQuoteIndex)) {
@@ -345,14 +345,11 @@ export class JsonCursorPath {
      * Return the first index of the next/prev specified token.
      * If not found, return the index of the end of the code (code.length) or -1 depending on the direction.
      */
-    private parseUntilToken(index: number, token: string | string[], ignoreEscaped = true): number {
+    private parseUntilToken(index: number, token: string | string[]): number {
         const tokens = Array.isArray(token) ? token : [token];
 
         while (index < this.code.length && index >= 0) {
             if (tokens.includes(this.code[index])) {
-                if (!ignoreEscaped) {
-                    return index;
-                }
                 // Count number of `\` before the token. If there is an even number, the token is not escaped
                 // eg \\\\" -> 4 slashes, not escaped
                 // eg \\\" -> 3 slashes, escaped

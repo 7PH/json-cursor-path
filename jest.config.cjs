@@ -1,7 +1,7 @@
 module.exports = {
     collectCoverage: true,
     collectCoverageFrom: [
-        'src/**/JsonParser.ts'
+        'src/**/json-cursor-path.ts'
     ],
     coverageProvider: 'v8',
     testMatch: [

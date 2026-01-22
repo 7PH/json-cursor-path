@@ -1,6 +1,6 @@
 {
     "name": "json-cursor-path",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "repository": {
         "type": "git",
         "url": "https://github.com/7PH/json-cursor-path.git"
@@ -10,7 +10,7 @@
         "import": "./build/json-cursor-path.js",
         "require": "./build/json-cursor-path.cjs"
     },
-    "description": "Convert a position in a raw JSON to the path in the parsed object",
+    "description": "Get the JSONPath at any cursor position in JSON text",
     "main": "build/json-cursor-path.js",
     "types": "build/json-cursor-path.d.ts",
     "files": [
@@ -24,12 +24,18 @@
     },
     "keywords": [
         "json",
+        "jsonpath",
+        "cursor",
+        "editor",
+        "autocomplete",
         "json-cursor",
         "json-parser",
         "json-path",
         "parser"
     ],
-    "author": "7PH <b.raymond@protonmail.com",
+    "homepage": "https://github.com/7PH/json-cursor-path",
+    "bugs": "https://github.com/7PH/json-cursor-path/issues",
+    "author": "7PH <b.raymond@protonmail.com>",
     "license": "MIT",
     "devDependencies": {
         "@babel/preset-env": "^7.24.7",
@@ -48,7 +54,7 @@
     },
     "size-limit": [
         {
-            "limit": "999 B",
+            "limit": "1099 B",
             "path": "dist/*.min.js"
         }
     ]
