@@ -5,6 +5,10 @@
 
 Get the JSONPath at any cursor position in JSON text. Perfect for editor plugins, JSON tools, and autocomplete features.
 
+[**Try the interactive demo**](https://7ph.github.io/json-cursor-path/)
+
+![demo](docs-src/public/demo.gif)
+
 ## Getting started
 
 1. Install `json-cursor-path`
