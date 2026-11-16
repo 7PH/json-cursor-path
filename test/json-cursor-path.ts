@@ -125,6 +125,16 @@ describe('JsonCursorPath', () => {
         });
     });
 
+    describe('should handle arrays without whitespace after commas', () => {
+        it('returns correct paths in compact arrays', () => {
+            expect(new JsonCursorPath('[1,2,3]', OPTIONS).get(3)).toBe('$[1]');
+            expect(new JsonCursorPath('[1,2,3]', OPTIONS).get(5)).toBe('$[2]');
+            expect(new JsonCursorPath('["a","b","c"]', OPTIONS).get(10)).toBe('$[2][0]');
+            expect(new JsonCursorPath('[{"a":1},{"b":2}]', OPTIONS).get(14)).toBe('$[1].b');
+            expect(new JsonCursorPath('[[1],[2,3]]', OPTIONS).get(8)).toBe('$[1][1]');
+        });
+    });
+
     describe('should handle malformed JSON gracefully', () => {
         it('does not crash on trailing comma in array', () => {
             const parser = new JsonCursorPath('[1,]', OPTIONS);
