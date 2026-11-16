@@ -158,7 +158,7 @@ export class JsonCursorPath {
         }
 
         // Parse next value if there is one
-        return this.parseArray(result.endIndex + 1, index + 1);
+        return this.parseArray(result.endIndex, index + 1);
     }
 
     /**
